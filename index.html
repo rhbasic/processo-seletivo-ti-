@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+  <html lang="pt-BR">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dinâmica de Avaliação — Processo Seletivo Departamento de TI</title>
+<style>
+  :root{
+    --azul:#1f4e78;
+    --azul-claro:#2e6ba8;
+    --azul-bg:#eef4fa;
+          --verde:#2e7d5b;
+    --cinza:#5b6470;
+    --cinza-claro:#e7ebf0;
+          --branco:#ffffff;
+          --alerta:#c0392b;
+          --sombra:0 4px 18px rgba(31,78,120,0.12);
+}
+  *{box-sizing:border-box;}
+  body{
+        margin:0;
+    font-family:"Segoe UI",Arial,Helvetica,sans-serif;
+    background:linear-gradient(160deg,#f4f8fc 0%, #e9f0f7 100%);
+          color:#22303c;
+    min-height:100vh;
+}
+  .app{
+        max-width:820px;
+    margin:0 auto;
+    padding:28px 20px 60px;
+}
+  header.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:22px;
+  }
+  .brand{
+        font-weight:700;
+    color:var(--azul);
+    font-size:15px;
+    letter-spacing:.3px;
+}
+  .timer{
+        background:var(--branco);
+    border:1px solid var(--cinza-claro);
+    border-radius:20px;
+    padding:6px 14px;
+    font-size:13px;
+    color:var(--cinza);
+    font-variant-numeric:tabular-nums;
+    box-shadow:var(--sombra);
+  }
+  .steps{
+        display:flex;
+    gap:8px;
+    margin-bottom:26px;
+  }
+  .step{
+        flex:1;
+    height:8px;
+    border-radius:6px;
+    background:var(--cinza-claro);
+    overflow:hidden;
+    position:relative;
+  }
+  .step.active, .step.done{background:var(--azul-claro);}
+  .step.done{background:var(--verde);}
+  .card{
+        background:var(--branco);
+    border-radius:16px;
+    box-shadow:var(--sombra);
+    padding:32px 30px;
+    margin-bottom:18px;
+  }
+  h1{font-size:24px;color:var(--azul);margin:0 0 8px;}
+  h2{font-size:19px;color:var(--azul);margin:0 0 10px;}
+  h3{font-size:15px;color:var(--azul-claro);margin:22px 0 10px;}
+  p{line-height:1.55;color:#3a4650;}
+  .muted{color:var(--cinza);font-size:13.5px;}
+  .badge{
+        display:inline-block;
+    background:var(--azul-bg);
+    color:var(--azul);
+    font-size:12px;
+    font-weight:700;
+    padding:4px 10px;
+    border-radius:20px;
+    margin-bottom:12px;
+    letter-spacing:.4px;
+  }
+  label{display:block;font-size:13.5px;font-weight:600;color:#33414d;margin:14px 0 6px;}
+  input[type=text], input[type=email], textarea{
+        width:100%;
+    padding:11px 12px;
+    border:1.5px solid var(--cinza-claro);
+    border-radius:10px;
+    font-size:14.5px;
+    font-family:inherit;
+    background:#fbfcfe;
+    }
+  textarea{resize:vertical;min-height:90px;}
+  input:focus, textarea:focus{outline:none;border-color:var(--azul-claro);}
+  button{
+        font-family:inherit;
+    cursor:pointer;
+    border:none;
+    border-radius:10px;
+    font-size:14.5px;
+    font-weight:700;
+    padding:12px 22px;
+    transition:transform .08s ease, opacity .15s ease;
+}
+  button:active{transform:scale(0.97);}
+  .btn-primary{background:var(--azul);color:#fff;}
+    .btn-primary:hover{background:var(--azul-claro);}
+  .btn-primary:disabled{background:#a9bdd0;cursor:not-allowed;}
+    .btn-secondary{background:var(--azul-bg);color:var(--azul);}
+  .btn-ghost{background:transparent;color:var(--cinza);text-decoration:underline;padding:8px 4px;font-weight:600;}
+  .row-end{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;}
+  .row-between{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:22px;}
+  .options{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .option{
+        border:1.5px solid var(--cinza-claro);
+    border-radius:10px;
+    padding:13px 15px;
+    cursor:pointer;
+    font-size:14.5px;
+    background:#fbfcfe;
+        transition:border-color .12s, background .12s;
+  }
+  .option:hover{border-color:var(--azul-claro);background:var(--azul-bg);}
+  .option.selected{border-color:var(--azul);background:var(--azul-bg);font-weight:700;}
+  .qmeta{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .qcount{font-size:12.5px;color:var(--cinza);font-weight:700;}
+  /* Block design grid */
+  .blockwrap{display:flex;gap:34px;flex-wrap:wrap;align-items:flex-start;margin-top:16px;}
+  .blockcol h4{font-size:12.5px;color:var(--cinza);text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px;}
+  .grid{
+        display:grid;
+    gap:4px;
+    background:var(--cinza-claro);
+    padding:4px;
+    border-radius:10px;
+  }
+  .cell{
+        width:38px;height:38px;
+    background:#fff;
+        border-radius:5px;
+    cursor:pointer;
+    border:1px solid #dfe6ee;
+      }
+  .cell.readonly{cursor:default;}
+  .palette{display:flex;gap:8px;margin-top:12px;}
+  .swatch{
+        width:30px;height:30px;border-radius:7px;cursor:pointer;
+    border:2px solid transparent;
+  }
+  .swatch.active{border-color:#22303c;}
+  /* sortable list */
+  .sortlist{list-style:none;padding:0;margin:16px 0;display:flex;flex-direction:column;gap:8px;}
+  .sortitem{
+        background:#fbfcfe;
+            border:1.5px solid var(--cinza-claro);
+    border-radius:10px;
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    cursor:grab;
+    font-size:14px;
+  }
+  .sortitem.dragging{opacity:.4;}
+  .sortitem .handle{color:#b7c1cc;font-size:16px;}
+    .sortitem .idx{
+    background:var(--azul);color:#fff;font-weight:700;font-size:12px;
+        width:22px;height:22px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .arrows{display:flex;flex-direction:column;gap:2px;margin-left:auto;}
+  .arrows button{padding:2px 7px;font-size:11px;background:var(--cinza-claro);color:var(--azul);}
+  .bonus{
+        border:1.5px dashed #c9a227;
+    background:#fffaf0;
+            border-radius:12px;
+    padding:18px 20px;
+    margin-top:24px;
+  }
+  .bonus .badge{background:#fff2cc;color:#8a6d1a;}
+    .hidden{display:none !important;}
+  .finalbox{text-align:center;padding:10px 0 0;}
+  .finalbox .big{font-size:40px;margin-bottom:6px;}
+  .exportbtns{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+  .summary-line{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--cinza-claro);font-size:14px;}
+  .summary-line:last-child{border-bottom:none;}
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:#22303c;color:#fff;padding:10px 18px;border-radius:8px;font-size:13.5px;
+        opacity:0;pointer-events:none;transition:opacity .25s;
+  }
+  .toast.show{opacity:1;}
+  .scenario-context{
+        background:var(--azul-bg);
+    border-left:4px solid var(--azul-claro);
+    padding:12px 15px;
+    border-radius:6px;
+    font-size:14px;
+    margin-bottom:14px;
+}
+  #print-report-wrap{display:none;}
+  @media print{
+        body{background:#fff;}
+    .app{display:none !important;}
+    .toast{display:none !important;}
+    #print-report-wrap{display:block !important; padding:20px;}
+}
+</style>
+  </head>
+  <body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">Processo Seletivo · Departamento de TI</div>
+      <div class="timer" id="timer">00:00</div>
+    </header>
+    <div class="steps" id="steps">
+      <div class="step" data-step="1"></div>
+      <div class="step" data-step="2"></div>
+      <div class="step" data-step="3"></div>
+    </div>
+    <!-- WELCOME -->
+    <div class="card screen" id="screen-welcome">
+      <span class="badge">ANTES DE COMEÇAR</span>
+      <h1>Dinâmica de Avaliação Técnica</h1>
+    <p>Esta avaliação tem 3 etapas e leva entre 35 e 45 minutos. Ela mede raciocínio lógico, organização,
+      capacidade de priorizar com justificativa e julgamento como analista de TI generalista. Não existem
+    respostas "decoradas" — queremos entender como você pensa.</p>
+      <p class="muted">O cronômetro começa quando você clicar em "Iniciar". Você pode fazer uma pausa entre as
+    etapas, mas tente responder cada etapa de uma vez, sem interrupções.</p>
+    <label for="nome">Nome completo</label>
+    <input type="text" id="nome" placeholder="Seu nome">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" placeholder="seu@email.com">
+      <div class="row-end">
+        <button class="btn-primary" id="btn-start">Iniciar Avaliação →</button>
+    </div>
+  </div>
+  <!-- STAGE 1 -->
+    <div class="card screen hidden" id="screen-stage1">
+      <span class="badge">ETAPA 1 DE 3 · RACIOCÍNIO E ORGANIZAÇÃO</span>
+    <div id="s1-sequencias"></div>
+    <div id="s1-blocos" class="hidden"></div>
+      <div id="s1-processo" class="hidden"></div>
+      <div id="s1-bonus" class="hidden"></div>
+    </div>
+    <!-- STAGE 2 -->
+    <div class="card screen hidden" id="screen-stage2">
+      <span class="badge">ETAPA 2 DE 3 · PRIORIZAÇÃO DE CHAMADOS</span>
+    <h2>Você é o único analista disponível agora</h2>
+    <p>Chegaram estes 6 chamados quase ao mesmo tempo. Arraste os cartões (ou use as setas) para
+    ordená-los do <strong>mais urgente (1)</strong> para o <strong>menos urgente (6)</strong>.</p>
+      <ul class="sortlist" id="ticket-list"></ul>
+      <label for="justificativa">Justifique sua ordem de prioridade</label>
+    <textarea id="justificativa" placeholder="Explique, com suas palavras, por que você ordenou os chamados dessa forma..."></textarea>
+    <div class="row-between">
+      <span class="muted" id="just-count">0 caracteres</span>
+      </div>
+      <div class="bonus" style="margin-top:20px;">
+        <span class="badge">OPCIONAL</span>
+        <label for="iniciativa-extra" style="margin-top:2px;">Além da ordem acima, o que mais você faria por conta própria, mesmo sem ninguém pedir? (ex.: avisar usuários afetados, comunicar a liderança, registrar um alerta preventivo...)</label>
+        <textarea id="iniciativa-extra" placeholder="Se quiser, descreva aqui (opcional)..."></textarea>
+      </div>
+      <div class="row-end">
+        <button class="btn-primary" id="btn-stage2-next" disabled>Avançar para Etapa 3 →</button>
+      </div>
+    </div>
+    <!-- STAGE 3 -->
+    <div class="card screen hidden" id="screen-stage3">
+      <span class="badge">ETAPA 3 DE 3 · SIMULAÇÃO — TI GENERALISTA</span>
+    <div id="s3-container"></div>
+  </div>
+    <!-- FINAL -->
+    <div class="card screen hidden" id="screen-final">
+      <div class="finalbox">
+        <div class="big">✅</div>
+        <h1 id="final-title">Avaliação concluída!</h1>
+        <p id="final-sub" class="muted"></p>
+        <div style="text-align:left;max-width:420px;margin:20px auto 0;">
+          <div class="summary-line"><span>Etapa 1 — Raciocínio e Organização</span><span id="sum-t1">--</span></div>
+        <div class="summary-line"><span>Etapa 2 — Priorização</span><span id="sum-t2">--</span></div>
+        <div class="summary-line"><span>Etapa 3 — Simulação</span><span id="sum-t3">--</span></div>
+        <div class="summary-line"><span><strong>Tempo total</strong></span><span id="sum-total">--</span></div>
+        </div>
+        <p class="muted" id="email-status" style="margin-top:20px;">Enviando seu resultado para o RH...</p>
+        <p class="muted">Se quiser, você também pode baixar uma cópia abaixo.</p>
+      <div class="exportbtns">
+        <button class="btn-primary" id="btn-pdf">🖨 Baixar em PDF</button>
+        <button class="btn-secondary" id="btn-download">⬇ Baixar (.json)</button>
+        <button class="btn-secondary" id="btn-copy">📋 Copiar resumo</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="print-report-wrap">
+  <div id="print-report-content"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+  <script>
+  /* ============================================================
+     ESTADO GLOBAL
+     ============================================================ */
+  const state = {
+    candidate: { nome:"", email:"" },
+  startedAt: null,
+      finishedAt: null,
+      stageTimes: { s1:{start:null,end:null}, s2:{start:null,end:null}, s3:{start:null,end:null} },
+  stage1: { sequencias: [], blocos: [], processo: { respostaOrdem: [], resets:0 }, bonus: { tentou:false, resposta:"" } },
+  stage2: { ordem: [], justificativa: "", iniciativaExtra: "" },
+  stage3: { respostas: [], checklistProatividade: { tentou:false, marcados:[] } },
+  envioEmail: { tentou:false, sucesso:null }
+                       };
+let timerInterval = null;
+function fmtTime(ms){
+    const total = Math.floor(ms/1000);
+  const m = String(Math.floor(total/60)).padStart(2,"0");
+  const s = String(total%60).padStart(2,"0");
+  return m+":"+s;
+}
+function showToast(msg){
+    const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1800);
+}
+function goToScreen(id){
+    document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function setStepProgress(n){
+    document.querySelectorAll(".step").forEach(st=>{
+    const d = parseInt(st.dataset.step);
+    st.classList.remove("active","done");
+    if(d < n) st.classList.add("done");
+    else if(d === n) st.classList.add("active");
+});
+                  }
+
+/* ============================================================
+     INÍCIO
+     ============================================================ */
+document.getElementById("btn-start").addEventListener("click", ()=>{
+    const nome = document.getElementById("nome").value.trim();
+  const email = document.getElementById("email").value.trim();
+  if(!nome || !email){ showToast("Preencha nome e e-mail para começar."); return; }
+  state.candidate.nome = nome;
+  state.candidate.email = email;
+  state.startedAt = Date.now();
+  timerInterval = setInterval(()=>{
+        document.getElementById("timer").textContent = fmtTime(Date.now()-state.startedAt);
+                          }, 1000);
+  setStepProgress(1);
+  state.stageTimes.s1.start = Date.now();
+  goToScreen("screen-stage1");
+  renderSequencias();
+});
+/* ============================================================
+     ETAPA 1.1 — SEQUÊNCIAS E PADRÕES
+   ============================================================ */
+const seqQuestions = [
+{
+      texto:"Complete a sequência: 2, 4, 8, 16, ?",
+            opcoes:["20","24","32","30"]
+        },
+{
+    texto:"Qual figura completa o padrão? 🔺 🔺 🔵 🔺 🔺 🔵 🔺 🔺 ?",
+          opcoes:["🔵","🔺","🔺🔵","🔵🔵"]
+      },
+{
+    texto:"Todos os servidores da Sala A são monitorados 24h. O Servidor X não é monitorado 24h. Logo:",
+          opcoes:[
+            "O Servidor X está na Sala A",
+            "O Servidor X não está na Sala A",
+            "Não é possível saber onde está o Servidor X",
+            "Todos os servidores são monitorados 24h"
+          ]
+      },
+{
+    texto:"Numa fila de atendimento, cada chamado resolvido gera 1 chamado de acompanhamento, que por sua vez não gera mais nenhum. Se você abriu 4 chamados hoje, quantos chamados (originais + acompanhamento) existirão ao todo?",
+          opcoes:["4","6","8","12"]
+      }
+];
+let seqIdx = 0;
+function renderSequencias(){
+    const box = document.getElementById("s1-sequencias");
+  box.classList.remove("hidden");
+  if(seqIdx >= seqQuestions.length){
+    document.getElementById("s1-blocos").classList.remove("hidden");
+    box.classList.add("hidden");
+    renderBlocos();
+    return;
+  }
+  const q = seqQuestions[seqIdx];
+  box.innerHTML = `
+        <h3>Parte 1 — Sequências e padrões</h3>
+    <div class="qmeta"><span class="qcount">Pergunta ${seqIdx+1} de ${seqQuestions.length}</span></div>
+        <p style="font-size:16px;font-weight:600;">${q.texto}</p>
+        <div class="options" id="seq-options"></div>
+      `;
+  const optWrap = document.getElementById("seq-options");
+  q.opcoes.forEach((op,i)=>{
+    const d = document.createElement("div");
+    d.className = "option";
+    d.textContent = op;
+    d.addEventListener("click", ()=>{
+      const t0 = Date.now();
+      state.stage1.sequencias.push({pergunta:q.texto, resposta:op, indice:i});
+      seqIdx++;
+      renderSequencias();
+});
+    optWrap.appendChild(d);
+});
+}
+
+/* ============================================================
+   ETAPA 1.2 — MONTE O BLOCO
+   ============================================================ */
+const paletteColors = ["#2e6ba8","#c0392b","#e0e0e0"];
+const blockRounds = [
+{ size:3, pattern:[0,2,0, 2,0,2, 0,2,0], cores:["#2e6ba8","#e0e0e0"] },
+{ size:4, pattern:[0,1,0,1, 1,0,1,0, 2,2,0,1, 0,1,2,2], cores:["#2e6ba8","#e0e0e0","#c0392b"] }
+];
+let blockIdx = 0;
+function renderBlocos(){
+    const box = document.getElementById("s1-blocos");
+  if(blockIdx >= blockRounds.length){
+    box.classList.add("hidden");
+    document.getElementById("s1-processo").classList.remove("hidden");
+    renderProcesso();
+    return;
+  }
+  const round = blockRounds[blockIdx];
+  const size = round.size;
+  let userGrid = new Array(size*size).fill(-1);
+  let selectedColorIdx = 0;
+  let clicks = 0;
+  box.innerHTML = `
+        <h3>Parte 2 — Monte o bloco (rodada ${blockIdx+1} de ${blockRounds.length})</h3>
+        <p>Reproduza o padrão da esquerda clicando numa cor da paleta e depois num quadrado da grade da direita.</p>
+    <div class="blockwrap">
+      <div class="blockcol">
+        <h4>Padrão alvo</h4>
+        <div class="grid" id="target-grid" style="grid-template-columns:repeat(${size},38px);"></div>
+          </div>
+          <div class="blockcol">
+            <h4>Sua grade</h4>
+            <div class="grid" id="user-grid" style="grid-template-columns:repeat(${size},38px);"></div>
+            <div class="palette" id="palette"></div>
+          </div>
+        </div>
+        <div class="row-end">
+          <button class="btn-ghost" id="btn-clear-grid">Limpar grade</button>
+          <button class="btn-primary" id="btn-confirm-block">Confirmar padrão →</button>
+    </div>
+  `;
+  const targetGrid = document.getElementById("target-grid");
+  round.pattern.forEach(colorIdx=>{
+        const c = document.createElement("div");
+        c.className = "cell readonly";
+    c.style.background = round.cores[colorIdx];
+    targetGrid.appendChild(c);
+});
+  const userGridEl = document.getElementById("user-grid");
+  const cellEls = [];
+  for(let i=0;i<size*size;i++){
+    const c = document.createElement("div");
+    c.className = "cell";
+    c.style.background = "#fff";
+    c.addEventListener("click", ()=>{
+            clicks++;
+      userGrid[i] = selectedColorIdx;
+      c.style.background = round.cores[selectedColorIdx];
+  });
+    userGridEl.appendChild(c);
+    cellEls.push(c);
+  }
+  const paletteEl = document.getElementById("palette");
+  round.cores.forEach((cor,i)=>{
+    const sw = document.createElement("div");
+    sw.className = "swatch" + (i===0 ? " active" : "");
+    sw.style.background = cor;
+    sw.addEventListener("click", ()=>{
+      selectedColorIdx = i;
+      document.querySelectorAll("#palette .swatch").forEach(s=>s.classList.remove("active"));
+      sw.classList.add("active");
+});
+    paletteEl.appendChild(sw);
+});
+  document.getElementById("btn-clear-grid").addEventListener("click", ()=>{
+    userGrid = new Array(size*size).fill(-1);
+    cellEls.forEach(c=>c.style.background="#fff");
+    clicks++;
+});
+  document.getElementById("btn-confirm-block").addEventListener("click", ()=>{
+    const t0 = Date.now();
+    let acertos = 0;
+    userGrid.forEach((v,i)=>{ if(v === round.pattern[i]) acertos++; });
+    state.stage1.blocos.push({
+      rodada: blockIdx+1,
+      tamanho: size,
+      gradeFinal: userGrid.slice(),
+      cliques: clicks,
+      percentualCorreto: Math.round((acertos/(size*size))*100)
+});
+    blockIdx++;
+    renderBlocos();
+});
+}
+
+/* ============================================================
+   ETAPA 1.3 — ORGANIZE O PROCESSO
+   ============================================================ */
+/* Observação: esta lista é escrita propositalmente fora da ordem correta
+   (e ainda passa por shuffle() antes de exibir) para que a ordem certa não
+   fique visível a quem inspecionar o código-fonte. O gabarito com a ordem
+   correta fica apenas no documento interno de RH. */
+const processoSteps = [
+  "Testar com outro cabo de energia",
+  "Abrir o gabinete e verificar os componentes internos",
+  "Verificar se o cabo de energia está bem conectado",
+  "Verificar se a fonte de alimentação acende algum LED",
+  "Testar o computador em outra tomada"
+];
+let processoOrder = [];
+function shuffle(arr){
+    const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function renderProcesso(){
+    const box = document.getElementById("s1-processo");
+  processoOrder = shuffle(processoSteps);
+  box.innerHTML = `
+        <h3>Parte 3 — Organize o processo</h3>
+    <p>Um computador não liga. Coloque os passos de diagnóstico na ordem correta (do primeiro ao último), arrastando os itens ou usando as setas.</p>
+    <ul class="sortlist" id="processo-list"></ul>
+    <div class="row-end">
+      <button class="btn-primary" id="btn-confirm-processo">Confirmar ordem →</button>
+        </div>
+      `;
+  renderSortable("processo-list", processoOrder, ()=>{ state.stage1.processo.resets++; });
+  document.getElementById("btn-confirm-processo").addEventListener("click", ()=>{
+        const items = Array.from(document.querySelectorAll("#processo-list .sortitem")).map(li=>li.dataset.value);
+    state.stage1.processo.respostaOrdem = items;
+    document.getElementById("s1-processo").classList.add("hidden");
+    document.getElementById("s1-bonus").classList.remove("hidden");
+    renderBonus();
+});
+}
+/* Generic drag-and-drop + arrow-button sortable list */
+function renderSortable(containerId, items, onReorder){
+  const ul = document.getElementById(containerId);
+  ul.innerHTML = "";
+  items.forEach((text)=>{
+    const li = document.createElement("li");
+    li.className = "sortitem";
+    li.draggable = true;
+    li.dataset.value = text;
+    li.innerHTML = `<span class="handle">⠿</span><span class="idx"></span><span>${text}</span>
+      <span class="arrows"><button type="button" class="up">▲</button><button type="button" class="down">▼</button></span>`;
+    ul.appendChild(li);
+});
+  updateIndices(ul);
+  let dragEl = null;
+  ul.addEventListener("dragstart", e=>{
+    dragEl = e.target.closest(".sortitem");
+    if(dragEl) dragEl.classList.add("dragging");
+});
+  ul.addEventListener("dragend", e=>{
+    if(dragEl) dragEl.classList.remove("dragging");
+    dragEl = null;
+    updateIndices(ul);
+    if(onReorder) onReorder();
+});
+  ul.addEventListener("dragover", e=>{
+    e.preventDefault();
+    const after = getDragAfterElement(ul, e.clientY);
+    const dragging = ul.querySelector(".dragging");
+    if(!dragging) return;
+    if(after == null) ul.appendChild(dragging);
+    else ul.insertBefore(dragging, after);
+});
+  ul.querySelectorAll(".up").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const li = btn.closest(".sortitem");
+      const prev = li.previousElementSibling;
+      if(prev) ul.insertBefore(li, prev);
+      updateIndices(ul);
+      if(onReorder) onReorder();
+});
+});
+  ul.querySelectorAll(".down").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const li = btn.closest(".sortitem");
+      const next = li.nextElementSibling;
+      if(next) ul.insertBefore(next, li);
+      updateIndices(ul);
+      if(onReorder) onReorder();
+});
+});
+}
+function updateIndices(ul){
+  Array.from(ul.children).forEach((li,i)=>{
+    li.querySelector(".idx").textContent = i+1;
+});
+}
+function getDragAfterElement(container, y){
+  const els = [...container.querySelectorAll(".sortitem:not(.dragging)")];
+  return els.reduce((closest, child)=>{
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height/2;
+    if(offset < 0 && offset > closest.offset){
+      return {offset: offset, element: child};
+} else {
+      return closest;
+}
+}, {offset: -Infinity}).element;
+}
+
+/* ============================================================
+   ETAPA 1.4 — DESAFIO BÔNUS (OPCIONAL)
+   ============================================================ */
+function renderBonus(){
+  const box = document.getElementById("s1-bonus");
+  box.innerHTML = `
+    <div class="bonus">
+      <span class="badge">DESAFIO EXTRA · OPCIONAL</span>
+      <p><strong>Este desafio é opcional</strong> e não é obrigatório para continuar a avaliação.</p>
+      <p>Um relógio comum tem ponteiros de hora e minuto. Em um período de 12 horas, quantas vezes os dois
+      ponteiros se sobrepõem exatamente (ficam um em cima do outro)?</p>
+      <textarea id="bonus-resposta" placeholder="Se quiser tentar, escreva sua resposta e o raciocínio aqui..."></textarea>
+      <div class="row-between">
+        <button class="btn-ghost" id="btn-skip-bonus">Pular desafio bônus</button>
+        <button class="btn-primary" id="btn-send-bonus">Enviar resposta do bônus →</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("btn-skip-bonus").addEventListener("click", ()=>{
+    state.stage1.bonus.tentou = false;
+    finishStage1();
+});
+  document.getElementById("btn-send-bonus").addEventListener("click", ()=>{
+    const val = document.getElementById("bonus-resposta").value.trim();
+    state.stage1.bonus.tentou = val.length > 0;
+    state.stage1.bonus.resposta = val;
+    finishStage1();
+});
+}
+function finishStage1(){
+  state.stageTimes.s1.end = Date.now();
+  state.stageTimes.s2.start = Date.now();
+  setStepProgress(2);
+  goToScreen("screen-stage2");
+  renderStage2();
+}
+/* ============================================================
+   ETAPA 2 — PRIORIZAÇÃO DE CHAMADOS
+   ============================================================ */
+const tickets = [
+  "Sistema de vendas fora do ar para toda a loja, em horário de pico (fila de clientes se formando).",
+  "Um colaborador não consegue imprimir um relatório que só precisa até o fim do dia.",
+  "A diretora não consegue acessar o e-mail e tem uma reunião importante em 10 minutos.",
+  "Alerta automático: servidor de backup com 15% de espaço em disco livre (ainda dentro do limite seguro).",
+  "Um funcionário esqueceu a senha da rede Wi-Fi de visitantes.",
+  "Vários funcionários receberam um e-mail suspeito pedindo para 'confirmar a senha' — possível phishing."
+];
+function renderStage2(){
+    renderSortable("ticket-list", shuffle(tickets), null);
+  const textarea = document.getElementById("justificativa");
+  const counter = document.getElementById("just-count");
+  const btnNext = document.getElementById("btn-stage2-next");
+  textarea.value = "";
+  textarea.addEventListener("input", ()=>{
+        const len = textarea.value.trim().length;
+    counter.textContent = len + " caracteres";
+    btnNext.disabled = len < 40;
+});
+  btnNext.onclick = ()=>{
+        const items = Array.from(document.querySelectorAll("#ticket-list .sortitem")).map(li=>li.dataset.value);
+    state.stage2.ordem = items;
+    state.stage2.justificativa = textarea.value.trim();
+    state.stage2.iniciativaExtra = document.getElementById("iniciativa-extra").value.trim();
+    state.stageTimes.s2.end = Date.now();
+    state.stageTimes.s3.start = Date.now();
+    setStepProgress(3);
+    goToScreen("screen-stage3");
+    renderStage3();
+};
+}
+
+/* ============================================================
+   ETAPA 3 — SIMULAÇÃO TI GENERALISTA
+   ============================================================ */
+const s3Situations = [
+{
+    contexto:"9h03 — Um usuário liga dizendo que 'o sistema todo caiu'.",
+          pergunta:"Qual sua primeira ação?",
+          opcoes:[
+            "Já abro um chamado crítico e acionar o fornecedor do sistema imediatamente",
+            "Pergunto se é só com ele ou se outros colegas também estão sem acesso",
+            "Peço para ele reiniciar o computador e encerro a ligação",
+            "Ignoro até alguém mais confirmar o problema"
+          ],
+          pedirTexto:false
+      },
+      {
+          contexto:"9h20 — Confirmado: o problema é só com esse usuário. O computador dele mostra 'sem acesso à rede'.",
+                pergunta:"Qual sua próxima ação?",
+                opcoes:[
+                  "Verifico o cabo de rede/Wi-Fi e as configurações de IP da máquina",
+                  "Reinstalo o sistema operacional por precaução",
+                  "Troco o computador do usuário por outro",
+                  "Digo que é normal e peço para tentar de novo mais tarde"
+                ],
+                pedirTexto:false
+            },
+{
+    contexto:"Durante esse atendimento, você percebe que o antivírus desse computador está desatualizado há 8 meses — algo que não tem relação com o chamado atual.",
+          pergunta:"O que você faz em relação a isso?",
+          opcoes:[
+            "Ignoro, não foi para isso que fui chamado",
+            "Aviso o usuário, registro a situação e sinalizo para atualização (agora ou em chamado separado)",
+            "Paro tudo e passo o resto do dia resolvendo só isso, mesmo sem prioridade definida",
+            "Formato o computador imediatamente sem avisar ninguém"
+          ],
+          pedirTexto:false
+      },
+{
+    contexto:"Um chamado antigo (aberto há 3 dias, baixa prioridade) aparece na sua fila. O usuário mandou um e-mail educado perguntando se há previsão de solução.",
+          pergunta:"Como você lida com isso?",
+          opcoes:[
+            "Respondo dando um retorno honesto sobre prazo, mesmo que seja 'ainda não priorizado'",
+            "Não respondo até resolver, para não dar falsa expectativa",
+            "Resolvo na hora, interrompendo o que está em andamento, só porque ele perguntou",
+            "Encaminho para outra pessoa sem explicação"
+          ],
+          pedirTexto:false
+      },
+{
+    contexto:"Fim do expediente de sexta-feira: chegaram 12 chamados novos durante a noite/madrugada, de categorias e urgências diferentes.",
+          pergunta:"Descreva, em poucas frases, como você organizaria essa fila na segunda-feira de manhã.",
+          opcoes:[],
+          pedirTexto:true
+      }
+];
+let s3Idx = 0;
+function renderStage3(){
+    s3Idx = 0;
+  s3Render();
+}
+function s3Render(){
+    const box = document.getElementById("s3-container");
+  if(s3Idx >= s3Situations.length){
+    renderProactivityChecklist();
+    return;
+  }
+  const sit = s3Situations[s3Idx];
+  box.innerHTML = `
+        <div class="qmeta"><span class="qcount">Situação ${s3Idx+1} de ${s3Situations.length}</span></div>
+        <div class="scenario-context">${sit.contexto}</div>
+        <p style="font-size:16px;font-weight:600;">${sit.pergunta}</p>
+        <div id="s3-body"></div>
+      `;
+  const bodyEl = document.getElementById("s3-body");
+  if(sit.pedirTexto){
+    bodyEl.innerHTML = `<textarea id="s3-texto" placeholder="Escreva sua resposta..."></textarea>
+      <div class="row-end"><button class="btn-primary" id="s3-next">Avançar →</button></div>`;
+    document.getElementById("s3-next").addEventListener("click", ()=>{
+      const val = document.getElementById("s3-texto").value.trim();
+      state.stage3.respostas.push({situacao:sit.contexto, pergunta:sit.pergunta, resposta:val});
+      s3Idx++;
+      s3Render();
+});
+} else {
+    const optWrap = document.createElement("div");
+    optWrap.className = "options";
+    sit.opcoes.forEach((op,i)=>{
+      const d = document.createElement("div");
+      d.className = "option";
+      d.textContent = op;
+      d.addEventListener("click", ()=>{
+        state.stage3.respostas.push({situacao:sit.contexto, pergunta:sit.pergunta, resposta:op, indice:i});
+        s3Idx++;
+        s3Render();
+});
+      optWrap.appendChild(d);
+});
+    bodyEl.appendChild(optWrap);
+}
+}
+
+/* ============================================================
+   CHECKLIST OPCIONAL DE PROATIVIDADE (fim da Etapa 3)
+   ============================================================ */
+const proactivityItems = [
+  "Documentar a solução para a equipe, mesmo sem ser pedido",
+  "Sugerir uma melhoria de processo para evitar que o problema se repita",
+  "Avisar proativamente outros usuários que podem ter o mesmo problema",
+  "Comunicar o gestor sobre um risco identificado durante o atendimento",
+  "Atualizar a base de conhecimento/FAQ da equipe",
+  "Propor automatizar uma tarefa manual repetitiva"
+];
+function renderProactivityChecklist(){
+    const box = document.getElementById("s3-container");
+  box.innerHTML = `
+        <div class="bonus">
+          <span class="badge">OPCIONAL</span>
+          <h3 style="margin-top:6px;">Última pergunta — Iniciativa própria</h3>
+      <p>Marque, das opções abaixo, quais atitudes você realmente costuma tomar por conta própria no dia a dia,
+          mesmo sem ninguém pedir. Marque quantas fizerem sentido — ou nenhuma, se não for o seu caso.</p>
+          <div id="proactivity-options" style="display:flex;flex-direction:column;gap:8px;margin:14px 0;"></div>
+          <div class="row-end">
+            <button class="btn-primary" id="btn-finish-proactivity">Concluir avaliação →</button>
+      </div>
+    </div>
+  `;
+  const optsBox = document.getElementById("proactivity-options");
+  const checked = new Set();
+  proactivityItems.forEach((item)=>{
+        const label = document.createElement("label");
+        label.style.cssText = "display:flex;align-items:center;gap:10px;font-weight:400;margin:0;cursor:pointer;";
+    label.innerHTML = `<input type="checkbox" style="width:16px;height:16px;"> <span>${item}</span>`;
+    label.querySelector("input").addEventListener("change", (e)=>{
+            if(e.target.checked) checked.add(item); else checked.delete(item);
+});
+    optsBox.appendChild(label);
+});
+  document.getElementById("btn-finish-proactivity").addEventListener("click", ()=>{
+    state.stage3.checklistProatividade.tentou = checked.size > 0;
+    state.stage3.checklistProatividade.marcados = Array.from(checked);
+    finishAll();
+});
+}
+/* ============================================================
+   FINALIZAÇÃO
+   ============================================================ */
+function finishAll(){
+  state.stageTimes.s3.end = Date.now();
+  state.finishedAt = Date.now();
+  clearInterval(timerInterval);
+  setStepProgress(4);
+  const t1 = state.stageTimes.s1.end - state.stageTimes.s1.start;
+  const t2 = state.stageTimes.s2.end - state.stageTimes.s2.start;
+  const t3 = state.stageTimes.s3.end - state.stageTimes.s3.start;
+  const total = state.finishedAt - state.startedAt;
+  document.getElementById("final-title").textContent = `Avaliação concluída, ${state.candidate.nome.split(" ")[0]}!`;
+  document.getElementById("final-sub").textContent = "Obrigado por participar do processo seletivo.";
+  document.getElementById("sum-t1").textContent = fmtTime(t1);
+  document.getElementById("sum-t2").textContent = fmtTime(t2);
+  document.getElementById("sum-t3").textContent = fmtTime(t3);
+  document.getElementById("sum-total").textContent = fmtTime(total);
+  goToScreen("screen-final");
+  const data = buildExportObject();
+  sendResultByEmail(data);
+}
+function buildExportObject(){
+  return {
+    candidato: state.candidate,
+    processo: "Processo Seletivo — Departamento de TI",
+    iniciadoEm: new Date(state.startedAt).toISOString(),
+    finalizadoEm: new Date(state.finishedAt).toISOString(),
+    tempos: {
+      etapa1_ms: state.stageTimes.s1.end - state.stageTimes.s1.start,
+      etapa2_ms: state.stageTimes.s2.end - state.stageTimes.s2.start,
+      etapa3_ms: state.stageTimes.s3.end - state.stageTimes.s3.start,
+      total_ms: state.finishedAt - state.startedAt
+},
+    etapa1: state.stage1,
+    etapa2: state.stage2,
+    etapa3: state.stage3
+};
+}
+
+/* Texto completo e legível do resultado — usado no PDF, no e-mail e no "copiar resumo" */
+function buildFullSummaryText(data){
+  const L = [];
+  L.push(`Resultado — Processo Seletivo Departamento de TI`);
+  L.push(`Candidato(a): ${data.candidato.nome} (${data.candidato.email})`);
+  L.push(`Concluído em: ${new Date(data.finalizadoEm).toLocaleString("pt-BR")}`);
+  L.push(`Tempo total: ${fmtTime(data.tempos.total_ms)}  ·  Etapa 1: ${fmtTime(data.tempos.etapa1_ms)}  ·  Etapa 2: ${fmtTime(data.tempos.etapa2_ms)}  ·  Etapa 3: ${fmtTime(data.tempos.etapa3_ms)}`);
+  L.push("");
+  L.push("========== ETAPA 1 — RACIOCÍNIO E ORGANIZAÇÃO ==========");
+  data.etapa1.sequencias.forEach((s,i)=>{
+        L.push(`Q${i+1}. ${s.pergunta}`);
+    L.push(`   Resposta: ${s.resposta}`);
+  });
+  data.etapa1.blocos.forEach((b)=>{
+    L.push(`Monte o bloco — rodada ${b.rodada} (${b.tamanho}x${b.tamanho}): ${b.percentualCorreto}% de acerto, ${b.cliques} cliques`);
+});
+  L.push(`Organize o processo — ordem dada: ${data.etapa1.processo.respostaOrdem.join(" | ")}`);
+  L.push(`Organize o processo — nº de reordenações: ${data.etapa1.processo.resets}`);
+  L.push(`Desafio bônus (opcional) — tentou: ${data.etapa1.bonus.tentou ? "Sim" : "Não"}`);
+  if(data.etapa1.bonus.resposta) L.push(`   Resposta do bônus: ${data.etapa1.bonus.resposta}`);
+  L.push("");
+  L.push("========== ETAPA 2 — PRIORIZAÇÃO DE CHAMADOS ==========");
+  L.push("Ordem escolhida (1 = mais urgente):");
+  data.etapa2.ordem.forEach((t,i)=>L.push(`   ${i+1}) ${t}`));
+  L.push(`Justificativa: ${data.etapa2.justificativa}`);
+  L.push(`Iniciativa extra (opcional): ${data.etapa2.iniciativaExtra || "(não respondeu)"}`);
+  L.push("");
+  L.push("========== ETAPA 3 — SIMULAÇÃO TI GENERALISTA ==========");
+  data.etapa3.respostas.forEach((r,i)=>{
+    L.push(`Situação ${i+1}. ${r.pergunta}`);
+    L.push(`   Resposta: ${r.resposta}`);
+});
+  const marcados = data.etapa3.checklistProatividade.marcados;
+  L.push(`Checklist de iniciativa própria (opcional): ${marcados.length ? marcados.join(" | ") : "nenhum item marcado"}`);
+  return L.join("\n");
+}
+/* Envio automático do resultado por e-mail via FormSubmit (sem necessidade de backend próprio).
+   Observação: no primeiro uso, o e-mail de destino recebe uma confirmação única da FormSubmit
+   que precisa ser aprovada; depois disso, os envios seguintes chegam automaticamente. */
+async function sendResultByEmail(data){
+  state.envioEmail.tentou = true;
+  try{
+    const fd = new FormData();
+    fd.append("_subject", `Resultado — Processo Seletivo TI — ${data.candidato.nome}`);
+    fd.append("_template", "box");
+    fd.append("_captcha", "false");
+    fd.append("nome", data.candidato.nome);
+    fd.append("email_candidato", data.candidato.email);
+    fd.append("tempo_total", fmtTime(data.tempos.total_ms));
+    fd.append("resumo_completo", buildFullSummaryText(data));
+    fd.append("resultado_json", JSON.stringify(data, null, 2));
+    const resp = await fetch("https://formsubmit.co/ajax/thais@basictelecom.com.br", {
+      method: "POST",
+      headers: { "Accept": "application/json" },
+      body: fd
+});
+    state.envioEmail.sucesso = resp.ok;
+} catch(e){
+    state.envioEmail.sucesso = false;
+}
+  updateEmailStatusUI();
+}
+function updateEmailStatusUI(){
+  const el = document.getElementById("email-status");
+  if(!el) return;
+  if(state.envioEmail.sucesso === true){
+    el.textContent = "✅ Resultado enviado automaticamente para o RH.";
+    el.style.color = "#2e7d5b";
+} else {
+    el.textContent = "⚠ Não foi possível confirmar o envio automático agora — baixe o resultado abaixo e envie por e-mail, por garantia.";
+    el.style.color = "#c0392b";
+}
+}
+function populatePrintReport(data){
+  const text = buildFullSummaryText(data);
+  const esc = text
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  document.getElementById("print-report-content").innerHTML =
+    `<pre style="white-space:pre-wrap;font-family:Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.6;color:#22303c;">${esc}</pre>`;
+}
+
+document.getElementById("btn-download").addEventListener("click", ()=>{
+  const data = buildExportObject();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const safeName = (state.candidate.nome || "candidato").trim().replace(/\s+/g,"_");
+  a.href = url;
+  a.download = `Resultado_${safeName}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("Arquivo baixado!");
+});
+document.getElementById("btn-pdf").addEventListener("click", ()=>{
+  const data = buildExportObject();
+  populatePrintReport(data);
+  setTimeout(()=>window.print(), 80);
+});
+document.getElementById("btn-copy").addEventListener("click", ()=>{
+  const data = buildExportObject();
+  const resumo = buildFullSummaryText(data);
+  navigator.clipboard.writeText(resumo).then(()=>{
+    showToast("Resumo copiado! Cole no e-mail de resposta.");
+}).catch(()=>{
+    showToast("Não foi possível copiar automaticamente. Baixe o arquivo .json.");
+});
+});
+</script>
+</body>
+</html>
